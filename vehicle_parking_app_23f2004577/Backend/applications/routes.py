@@ -841,6 +841,45 @@ def reserve_spot():
 
 
 
+
+@app.route("/api/reservation/<int:reservation_id>", methods=["GET"])
+@jwt_required()
+def get_reservation(reservation_id):
+    # Find reservation
+    reservation = Reservation.query.get(reservation_id)
+    if not reservation:
+        return jsonify({"error": "Reservation not found"}), 404
+
+    # ✅ Authorization: normal users can only see their own reservations
+    # Admin (or other roles) can see all
+    if getattr(current_user, "role", None) == "user" and reservation.user_id != current_user.id:
+        return jsonify({"error": "Not authorized"}), 403
+
+    # Find related spot and lot
+    spot = ParkingSpot.query.get(reservation.spot_id)
+    lot = ParkingLot.query.get(spot.lot_id) if spot else None
+    
+    now = datetime.utcnow()
+    duration_hours = (now - reservation.parking_timestamp).total_seconds() / 3600
+    duration_hours = max(0, round(duration_hours))  # at least 1 hour
+    cost = duration_hours * (lot.price if lot else 0)
+
+    return jsonify({
+        "reservation_id": reservation.id,
+        "spot_id": reservation.spot_id,
+        "vehicle_no": reservation.vehicle_no,
+        "parking_time": reservation.parking_timestamp.strftime("%Y-%m-%d %H:%M"),
+        # "releasing_time": (
+        #     reservation.leaving_timestamp.strftime("%Y-%m-%d %H:%M")
+        #     if reservation.leaving_timestamp else None
+        # ),
+        "releasing_time": datetime.utcnow().strftime("%Y-%m-%d %H:%M"),
+        "parking_cost": cost,
+        "location": lot.prime_location_name if lot else None,
+        "price_per_hour": lot.price if lot else None
+    }), 200
+
+
 @app.route("/api/release", methods=["POST"])
 @jwt_required()
 def release_spot():

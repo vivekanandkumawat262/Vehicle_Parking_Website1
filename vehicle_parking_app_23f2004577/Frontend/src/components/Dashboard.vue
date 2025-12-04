@@ -97,11 +97,22 @@
                 <td class="text-center">{{ lot.available_spots }}</td>
                 <td class="text-center">{{ lot.price }}₹</td>
                 <td class="text-center">
-                  <RouterLink :to="`/user/reserve/${lot.id}`">
-                    <button class="btn btn-primary btn-sm px-4 rounded-pill">
+                  <template v-if="Number(lot.available_spots) > 0">
+                    <RouterLink :to="`/user/reserve/${lot.id}`">
+                      <button class="btn btn-primary btn-sm px-4 rounded-pill">
+                        Book
+                      </button>
+                    </RouterLink>
+                  </template>
+
+                  <template v-else>
+                    <button
+                      class="btn btn-primary btn-sm px-4 rounded-pill"
+                      disabled
+                    >
                       Book
                     </button>
-                  </RouterLink>
+                  </template>
                 </td>
               </tr>
             </tbody>
@@ -139,64 +150,72 @@
       <h4 class="text-center my-4 text-primary">Parking Lots</h4>
       <p class="text-danger text-center" v-if="error">{{ error }}</p>
       <p class="text-success text-center" v-if="message">{{ message }}</p>
-        <div v-for="lot in parkingLots" :key="lot.id">
-            <div class="row justify-content-center" >
-                <div class="col-12 col-sm-6 col-md-4 mb-4" v-if="lot.number_of_spots > 0">
-                <div   class="card shadow-sm">
-                    <div class="card-body">
-                    <h5 class="card-title">🏙 Parking #{{ lot.id }}</h5>
-                    <p class="text-muted">Address: {{ lot.address }}</p>
-                    <p class="text-success">
-                        Occupied: {{ lot.occupied }}/{{ lot.number_of_spots }}
-                    </p>
+      <div v-for="lot in parkingLots" :key="lot.id">
+        <div class="row justify-content-center">
+          <div
+            class="col-12 col-sm-6 col-md-4 mb-4"
+            v-if="lot.number_of_spots > 0"
+          >
+            <div class="card shadow-sm">
+              <div class="card-body">
+                <h5 class="card-title">🏙 Parking #{{ lot.id }}</h5>
+                <p class="text-muted">Address: {{ lot.address }}</p>
+                <p class="text-success">
+                  Occupied: {{ lot.occupied }}/{{ lot.number_of_spots }}
+                </p>
 
-                    <h6 class="mt-3 text-center">Parking Spot Status</h6>
+                <h6 class="mt-3 text-center">Parking Spot Status</h6>
 
-                    <div class="d-flex flex-wrap justify-content-center gap-2 mt-2">
-                        <div
-                        v-for="spot in lot.spots"
-                        :key="spot.id"
-                        class="spot-box"
-                        :class="{
-                            available:
-                            spot.status === 'Available' || spot.status === 'A',
-                            occupied: spot.status === 'Occupied' || spot.status === 'O',
-                            reserved: spot.status === 'Reserved' || spot.status === 'R',
-                            unknown: ![
-                            'Available',
-                            'Occupied',
-                            'Reserved',
-                            'A',
-                            'O',
-                            'R',
-                            ].includes(spot.status),
-                        }"
-                        >
-                        <RouterLink
-                            :to="`/admin/view-spot/${lot.id}/${spot.id}`"
-                            style="color: black; text-decoration: none"
-                        >
-                            {{ spot.status }}
-                        </RouterLink>
-                        </div>
-                    </div>
-
-                    <div class="btn-group mt-3 w-100">
-                        <button class="btn btn-sm btn-warning" @click="editLot(lot.id)">
-                        Edit
-                        </button>
-                        <button
-                        class="btn btn-sm btn-danger"
-                        @click="deleteLot(lot.id)"
-                        >
-                        Delete
-                        </button>
-                    </div>
-                    </div>
+                <div class="d-flex flex-wrap justify-content-center gap-2 mt-2">
+                  <div
+                    v-for="spot in lot.spots"
+                    :key="spot.id"
+                    class="spot-box"
+                    :class="{
+                      available:
+                        spot.status === 'Available' || spot.status === 'A',
+                      occupied:
+                        spot.status === 'Occupied' || spot.status === 'O',
+                      reserved:
+                        spot.status === 'Reserved' || spot.status === 'R',
+                      unknown: ![
+                        'Available',
+                        'Occupied',
+                        'Reserved',
+                        'A',
+                        'O',
+                        'R',
+                      ].includes(spot.status),
+                    }"
+                  >
+                    <RouterLink
+                      :to="`/admin/view-spot/${lot.id}/${spot.id}`"
+                      style="color: black; text-decoration: none"
+                    >
+                      {{ spot.status }}
+                    </RouterLink>
+                  </div>
                 </div>
+
+                <div class="btn-group mt-3 w-100">
+                  <button
+                    class="btn btn-sm btn-warning"
+                    @click="editLot(lot.id)"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    class="btn btn-sm btn-danger"
+                    @click="deleteLot(lot.id)"
+                  >
+                    Delete
+                  </button>
                 </div>
+              </div>
             </div>
+          </div>
         </div>
+      </div>
       <div class="text-center mt-4">
         <button class="btn btn-primary btn-lg" @click="addLot">
           + Add Lot
